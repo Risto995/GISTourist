@@ -20,9 +20,11 @@ namespace TouristGIS.Filters
                 sourceFeatures = await sourceLayer.FeatureTable.QueryAsync(new QueryFilter() { WhereClause = sourceQuery });
             else sourceFeatures = await sourceLayer.FeatureTable.QueryAsync(sourceLayer.SelectedFeatureIDs);
 
-            if (sourceFeatures.Count() > 1 && inRadius)
+            if (sourceFeatures.Count() > 1)
             {
-                return await DoDistanceSpatial(sourceFeatures, destinationLayer, radius, destinationQuery);
+                if (inRadius)
+                    return await DoDistanceSpatial(sourceFeatures, destinationLayer, radius, destinationQuery);
+                else return await DoRelationSpatial(sourceFeatures, destinationLayer, relation, destinationQuery);
             }
 
             List<Feature> returnList = new List<Feature>();
@@ -61,5 +63,45 @@ namespace TouristGIS.Filters
                         returnList.Add(destinationFeature);
             return returnList.Distinct().ToList();
         }
+
+        public async Task<IEnumerable<Feature>> DoRelationSpatial(IEnumerable<Feature> sourceFeatures, FeatureLayer destinationLayer, SpatialRelationship relation, string destinationQuery)
+        {
+            List<Feature> returnList = new List<Feature>();
+            IEnumerable<Feature> destinationFeatures = await destinationLayer.FeatureTable.QueryAsync(new QueryFilter() { WhereClause = destinationQuery });
+            foreach (var sourceFeature in sourceFeatures)
+                foreach (var destinationFeature in destinationFeatures)
+                {
+                    switch (relation)
+                    {
+                        case SpatialRelationship.Contains:
+                            if (GeometryEngine.Contains(destinationFeature.Geometry, sourceFeature.Geometry))
+                                returnList.Add(destinationFeature);
+                            break;
+                        case SpatialRelationship.Crosses:
+                            if (GeometryEngine.Crosses(destinationFeature.Geometry, sourceFeature.Geometry))
+                                returnList.Add(destinationFeature);
+                            break;
+                        case SpatialRelationship.Intersects:
+                            if (GeometryEngine.Intersects(destinationFeature.Geometry, sourceFeature.Geometry))
+                                returnList.Add(destinationFeature);
+                            break;
+                        case SpatialRelationship.Overlaps:
+                            if (GeometryEngine.Overlaps(destinationFeature.Geometry, sourceFeature.Geometry))
+                                returnList.Add(destinationFeature);
+                            break;
+                        case SpatialRelationship.Touches:
+                            if (GeometryEngine.Touches(destinationFeature.Geometry, sourceFeature.Geometry))
+                                returnList.Add(destinationFeature);
+                            break;
+                        case SpatialRelationship.Within:
+                            if (GeometryEngine.Within(destinationFeature.Geometry, sourceFeature.Geometry))
+                                returnList.Add(destinationFeature);
+                            break;
+                        default: break;
+                    }
+                }
+            return returnList.Distinct().ToList();
+        }
     }
 }
+
