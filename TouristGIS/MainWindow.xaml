@@ -1,0 +1,167 @@
+﻿<Window x:Class="TouristGIS.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:esri="http://schemas.esri.com/arcgis/runtime/2013"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TouristGIS.ViewModels"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+        mc:Ignorable="d"
+        Title="MainWindow" WindowState="Maximized">
+    <Window.Resources>
+        <local:MainViewModel x:Key="MainViewModel" />
+    </Window.Resources>
+    <Window.DataContext>
+        <Binding Source="{StaticResource MainViewModel}" />
+    </Window.DataContext>
+    <Grid>
+        <Grid.Resources>
+            <Style TargetType="RadioButton" BasedOn="{StaticResource {x:Type ToggleButton}}" />
+        </Grid.Resources>
+
+        <esri:MapView Grid.ColumnSpan="3" Visibility="Visible" x:Name="MyMapView" Map="{Binding Map}" 
+				LayerLoaded="MyMapView_LayerLoaded" MouseMove="MyMapView_MouseMove" Margin="0,-42,0,-0.2">
+            <esri:MapView.Overlays>
+                <esri:OverlayItemsControl>
+                    <Border x:Name="FeatureOverlay" Background="#CCFFFFFF" BorderBrush="Black" BorderThickness="2"
+							Padding="4" HorizontalAlignment="Right" VerticalAlignment="Bottom" MaxHeight="300"
+							Visibility="Collapsed">
+                        <Grid>
+                            <TextBlock Text="Feature:" FontSize="14" FontWeight="Bold" />
+                            <ListView ItemsSource="{Binding Attributes}" Margin="0,25,0,0">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Width="75" Text="{Binding Key}" FontWeight="Bold" Margin="5,0,0,0" />
+                                            <TextBlock Width="175" Text="{Binding Value}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                        </Grid>
+                    </Border>
+                </esri:OverlayItemsControl>
+            </esri:MapView.Overlays>
+        </esri:MapView>
+
+        <Border HorizontalAlignment="Left" VerticalAlignment="Top" Margin="20,20,0,0" Padding="15" Width="300"
+                Background="White" BorderBrush="Black" BorderThickness="1" Height="575">
+            <Border.Effect>
+                <DropShadowEffect />
+            </Border.Effect>
+            <StackPanel>
+                <TextBlock Text="Tourist GIS"
+						   TextWrapping="Wrap" />
+                <StackPanel Orientation="Horizontal">
+                    <Button Content="Add layer" Width="100" Height="20" Margin="0,10,0,0" Click="ButtonAddLayer" />
+                    <Button Content="Remove layer" Width="100" Height="20" Margin="5,10,0,0"  Click="ButtonRemoveLayer" />
+                    <Button Content="⬆" Width="20" Height="20" Margin="5,10,0,0"  Click="MoveLayerUp" />
+                    <Button Content="⬇" Width="20" Height="20" Margin="5,10,0,0"  Click="MoveLayerDown" />
+                </StackPanel>
+                <StackPanel Margin="0">
+                    <Label>Layers:</Label>
+                    <ListBox x:Name="BasemapListBox" Grid.Column="0"
+                     ItemsSource="{Binding LoadedLayers}"
+                     VerticalAlignment="Top" HorizontalAlignment="Left"
+                     Height="120" Width="258" SelectionChanged="LayersListBox_SelectionChanged" Margin="0,0,-0.4,0">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <CheckBox IsChecked="{Binding Checked, Mode=TwoWay}" Margin="5 5 0 0" Click="LayersChk_Checked" />
+                                    <Label Content="{Binding Name}"></Label>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,10,0,0" DataContext="{Binding LayerProperty}">
+                    <CheckBox Name="ShowLabels_chk" Margin="0,2,10,0" Checked="ShowLabels_CheckBoxChanged" 
+                              Unchecked="ShowLabels_CheckBoxChanged" IsChecked="True" >Show labels</CheckBox>
+                    <Label Content="Select attribute:" Margin="0,1,5,0" Padding="0"/>
+                    <ComboBox Name="attributesComboBox" SelectedItem="{Binding SelectedAttribute}"  ItemsSource="{Binding Attributes}" 
+                              SelectionChanged="attributesComboBox_SelectionChanged" Height="22" Width="77"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,10,0,0" DataContext="{Binding LayerProperty}">
+                    <Label HorizontalAlignment="Left" Content="Layer display style:" Margin="0,1,5,0" Padding="0"/>
+                    <ComboBox Name="displayStyleComboBox" SelectedItem="{Binding Path=SelectedMarker}" ItemsSource="{Binding Path=AttributeMarkers}" 
+                              SelectionChanged="displayStyleComboBox_SelectionChanged" Height="22" Width="154"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,10,0,0" DataContext="{Binding LayerProperty}">
+                    <Label HorizontalAlignment="Left" Content="Layer display color:" Margin="0,1,5,0" Padding="0"/>
+                    <xctk:ColorPicker Name="ColorPicker" DisplayColorAndName="True" SelectedColor="{Binding SelectedColor}"  
+                                      SelectedColorChanged="ColorPicker_SelectedColorChanged" Height="22" Width="151"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                    <Label Content="Select map style:" Margin="0,1,5,0" Padding="0"/>
+                    <ComboBox SelectionChanged="MapStyle_ComboBox_SelectionChanged" Height="22" Width="165">
+                        <ComboBoxItem Content="Topo" IsSelected="True"
+                    		Tag="http://services.arcgisonline.com/arcgis/rest/services/World_Topo_Map/MapServer"/>
+                        <ComboBoxItem Content="Streets" 
+                    		Tag="http://services.arcgisonline.com/arcgis/rest/services/World_Street_Map/MapServer"/>
+                        <ComboBoxItem Content="Imagery" 
+                    		Tag="http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer"/>
+                    </ComboBox>
+                </StackPanel>
+                <StackPanel Margin="0,10,0,0">
+                    <TextBlock Text="4326 Coordinates" FontWeight="Bold" />
+                    <TextBlock x:Name="screenX" Text="X: 0"/>
+                    <TextBlock x:Name="screenY" Text="Y: 0"/>
+                    <TextBlock Text="GK Coordinates" FontWeight="Bold" />
+                    <TextBlock x:Name="mapX" Text="X: 0"/>
+                    <TextBlock x:Name="mapY" Text="Y: 0"/>
+                </StackPanel>
+                <TextBlock x:Name="txtInfo" FontSize="12" Visibility="Collapsed" Margin="0,10,0,0">
+					<Run Text="Shapefile:" FontSize="14" FontWeight="Bold" />
+					<LineBreak />
+					<Run Text="Name: " FontWeight="Bold" />
+					<Run Text="{Binding ID, Mode=OneWay}" />
+					<LineBreak />
+					<Run Text="Path: " FontWeight="Bold" />
+					<Run Text="{Binding DisplayName, Mode=OneWay}" />
+					<LineBreak />
+					<Run Text="Spatial Reference: " FontWeight="Bold" />
+					<Run Text="{Binding FeatureTable.SpatialReference.Wkid, Mode=OneWay}" />
+					<LineBreak />
+					<Run Text="Geometry Type: " FontWeight="Bold" />
+					<Run Text="{Binding FeatureTable.GeometryType, Mode=OneWay}" />
+					<LineBreak />
+					<Run Text="Features: " FontWeight="Bold" />
+					<Run Text="{Binding FeatureTable.RowCount, Mode=OneWay}" />
+                </TextBlock>
+            </StackPanel>
+        </Border>
+
+        <Border HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,20,20,0" Padding="15" Width="80"
+                Background="White" BorderBrush="Black" BorderThickness="1" Height="465">
+            <Border.Effect>
+                <DropShadowEffect/>
+            </Border.Effect>
+            <StackPanel >
+                <RadioButton ToolTip="Rectangle" Width="45" Height="45" Margin="0,0,0,10" Click="SelectRectangle" Background="#FFEEF5FD">
+                    <Image Source="Images\SelectRectangle.png"></Image>
+                </RadioButton>
+                <RadioButton ToolTip="Polygon" Width="45" Height="45" Margin="0,0,0,10" Click="SelectPolygon" Background="#FFEEF5FD">
+                    <Image Source="Images\SelectPolygon.png"></Image>
+                </RadioButton>
+                <RadioButton Width="45" Height="45" Margin="0,0,0,10" Click="SelectFeature" Background="#FFEEF5FD">
+                    <Image Source="Images\SelectFeature.png"></Image>
+                </RadioButton>
+                <RadioButton Width="45" Height="45" Margin="0,0,0,10" Click="Deselect" Background="#FFEEF5FD">
+                    <Image Source="Images\DeselectAll.png"></Image>
+                </RadioButton>
+                <Button Width="45" Height="45" Margin="0,0,0,10" Click="AttributeFilterButton" Background="#FFEEF5FD">
+                    <Image Source="Images\AttributeFilter.png"></Image>
+                </Button>
+                <RadioButton Width="45" Height="45" Margin="0,0,0,10" Checked="MeasureDistance" Unchecked="MeasureDistance" Background="#FFEEF5FD">
+                    <Image Source="Images\MeasureDistance.png"></Image>
+                </RadioButton>
+                <Button Width="45" Height="45" Margin="0,0,0,10" Click="SpatialFilterButton" Background="#FFEEF5FD">
+                    <Image Source="Images\SpatialFilter.png"></Image>
+                </Button>
+                <Button Width="45" Height="45" Margin="0,0,0,10" Click="DeleteOverlaysButton" Background="#FFEEF5FD">
+                    <Image Source="Images\DeleteSelected.png"></Image>
+                </Button>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

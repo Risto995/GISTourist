@@ -1,0 +1,62 @@
+﻿<Window x:Class="TouristGIS.SpatialFilterWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:model="clr-namespace:TouristGIS.ViewModels"
+        mc:Ignorable="d"
+        Title="SpatialFilterWindow" Height="280" Width="500">
+    <Window.Resources>
+        <model:SpatialViewModel x:Key="SpatialViewModel" />
+    </Window.Resources>
+    <Window.DataContext>
+        <Binding Source="{StaticResource SpatialViewModel}" />
+    </Window.DataContext>
+    <Window.Content>
+        <Grid>
+            <StackPanel>
+                <Separator Height="10" Background="Transparent"/>
+                <StackPanel Visibility="{Binding Visible}" Orientation="Horizontal" Margin="0,10,0,5" Height="25" Width="480">
+                    <Label>Source layer:</Label>
+                    <ComboBox Padding="0" Height="25" Width="100" ItemsSource="{Binding LoadedLayers}" SelectedItem="{Binding SelectedSourceLayer}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <Label Content="{Binding Name}"></Label>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <Label Margin="10,0,0,0">Filter:</Label>
+                    <TextBox Margin="0,2,0,0" Text="{Binding SourceFilter}" Width="220"></TextBox>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,10,0,5" Height="25" Width="480">
+                    <Label>Destination layer:</Label>
+                    <ComboBox Padding="0" Height="25" Width="100" ItemsSource="{Binding LoadedLayers}" SelectedItem="{Binding SelectedDestinationLayer}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <Label Content="{Binding Name}"></Label>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <Label Margin="10,0,0,0">Filter:</Label>
+                    <TextBox Margin="0,2,0,0" Text="{Binding DestinationFilter}" Width="220"></TextBox>
+                </StackPanel>
+                <Separator Margin="10" />
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,0" Height="25" Width="480">
+                    <RadioButton GroupName="type" IsChecked="{Binding InRadius}" VerticalAlignment="Center">Radius (in meters):</RadioButton>
+                    <TextBox Margin="10,0,0,0" VerticalAlignment="Center" Width="60" TextAlignment="Right" Text="{Binding Radius}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,10,0,5" Height="25" Width="480">
+                    <RadioButton GroupName="type" VerticalAlignment="Center">Spatial</RadioButton>
+                    <ComboBox Width="122" Margin="9,0" ItemsSource="{Binding Filters}" SelectedItem="{Binding SelectedRelation}" />
+                </StackPanel>
+                <Separator Margin="10" />
+                <DockPanel Margin="0,0,0,0" Height="25" Width="480">
+                    <Label>Show results:</Label>
+                    <RadioButton Margin="0,7,5,0" IsChecked="{Binding InTable}">In Table</RadioButton>
+                    <RadioButton Margin="0,7,0,0" >On Map</RadioButton>
+                    <Button HorizontalAlignment="Right" Height="22" Width="100" Margin="0,3,10,0" Click="RunQuery_Click" Content="Run Query"/>
+                </DockPanel>
+            </StackPanel>
+        </Grid>
+    </Window.Content>
+</Window>
